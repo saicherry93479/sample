@@ -53,9 +53,23 @@ jobs:
         
       - name: Delete previous image from DigitalOcean Container Registry
         run: |
-          IMAGE_NAME=${{ secrets.REGISTRY_NAME }}/staging
-          IMAGE_TAG=$(echo $GITHUB_SHA | head -c7)
-          PREVIOUS_TAG=$(doctl registry repository list-tags $IMAGE_NAME --format Tag --no-header | grep -v $IMAGE_TAG | tail -n 1)
+          # Construct the full image name including the registry name
+          IMAGE_NAME="${{ secrets.REGISTRY_NAME }}/staging"
+          
+          # Get the first 7 characters of the commit SHA as the image tag
+          IMAGE_TAG=$(echo ${{ github.sha }} | head -c7)
+          
+          # Retrieve the list of tags for the repository
+          TAGS=$(doctl registry repository list-tags $IMAGE_NAME --format Tag --no-header)
+          
+          # Exclude the current image tag from the list
+          PREVIOUS_TAG=$(echo "$TAGS" | grep -v $IMAGE_TAG | tail -n 1)
+          
+          # Check if there's a previous tag to delete
           if [ -n "$PREVIOUS_TAG" ]; then
-            doctl registry repository delete $IMAGE_NAME:$PREVIOUS_TAG --force
+            # Delete the previous tag
+            doctl registry repository delete "$IMAGE_NAME:$PREVIOUS_TAG" --force
           fi
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+
