@@ -46,7 +46,7 @@ jobs:
       
       - name: Verify deployment
         run: |
-          if ! kubectl rollout status deployment/python-example -n development; then
+          if ! kubectl rollout status deployment/flaskdevelopment -n development; then
             doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/python-example:$(echo $GITHUB_SHA | head -c7) --force
             exit 1
           fi
