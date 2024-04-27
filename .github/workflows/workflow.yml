@@ -14,6 +14,11 @@ jobs:
     steps:
       - name: Checkout devlopment
         uses: actions/checkout@v2
+
+      - name: Set up environment variables
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
       
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -30,7 +35,7 @@ jobs:
         run: docker push ${{ secrets.REGISTRY_NAME }}/devlopment:$(echo $GITHUB_SHA | head -c7)
       
       - name: Update deployment file
-        run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ secrets.REGISTRY_NAME }}/devlopment:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml
+        run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ secrets.REGISTRY_NAME }}/devlopment:'${TAG}'|' && sed -i 's|<NAME>|${{ env.BRANCH_NAME }}|' $GITHUB_WORKSPACE/config/deployment.yml
       
       - name: Save DigitalOcean kubeconfig with short-lived credentials
         run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.CLUSTER_NAME }}
