@@ -68,7 +68,7 @@ jobs:
         run: |
           IMAGE_NAME=${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}
           IMAGE_TAG=$(echo $GITHUB_SHA | head -c7)
-          PREVIOUS_TAG=$(doctl registry repository list-tags ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }} --format Tag --no-header | grep -v $IMAGE_TAG | tail -n 1)
+          PREVIOUS_TAG=$(doctl registry repository list-tags ${{ env.BRANCH_NAME }} --format Tag --no-header | grep -v $IMAGE_TAG | tail -n 1)
           if [ -n "$PREVIOUS_TAG" ]; then
             doctl registry repository delete $IMAGE_NAME:$PREVIOUS_TAG --force
           fi
