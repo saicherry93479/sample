@@ -59,7 +59,7 @@ jobs:
 
       - name: List all tags for the image
         run: |
-          IMAGE_NAME=${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}
+          IMAGE_NAME=${{ env.BRANCH_NAME }}
           doctl registry repository list-tags $IMAGE_NAME --format Tag --no-header
       
               
