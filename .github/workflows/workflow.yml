@@ -45,7 +45,11 @@ jobs:
         run: kubectl apply -f $GITHUB_WORKSPACE/config/deployment.yml -n development
       
       - name: Verify deployment
-        run: kubectl rollout status deployment/flaskdevelopment -n development
+        run: |
+          if ! kubectl rollout status deployment/python-example -n development; then
+            doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/python-example:$(echo $GITHUB_SHA | head -c7) --force
+            exit 1
+          fi
         
       - name: Delete previous image from DigitalOcean Container Registry
         run: |
