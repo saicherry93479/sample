@@ -21,42 +21,41 @@ jobs:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       
       - name: Build container image
-        run: docker build -t ${{ secrets.REGISTRY_NAME }}/python-example:$(echo $GITHUB_SHA | head -c7) .
+        run: docker build -t ${{ secrets.REGISTRY_NAME }}/staging:$(echo $GITHUB_SHA | head -c7) .
       
       - name: Log in to DigitalOcean Container Registry with short-lived credentials
         run: doctl registry login --expiry-seconds 1200
       
       - name: Push image to DigitalOcean Container Registry
-        run: docker push ${{ secrets.REGISTRY_NAME }}/python-example:$(echo $GITHUB_SHA | head -c7)
+        run: docker push ${{ secrets.REGISTRY_NAME }}/staging:$(echo $GITHUB_SHA | head -c7)
       
       - name: Update deployment file
-        run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ secrets.REGISTRY_NAME }}/python-example:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml
+        run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ secrets.REGISTRY_NAME }}/python-example:'${TAG}'|' $GITHUB_WORKSPACE/config/staging.yml
       
       - name: Save DigitalOcean kubeconfig with short-lived credentials
         run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.CLUSTER_NAME }}
       
-      - name: Check if development namespace exists
+      - name: Check if staging namespace exists
         run: |
-          if ! kubectl get namespace development; then
-            kubectl create namespace development
+          if ! kubectl get namespace staging; then
+            kubectl create namespace staging
           fi
       
-      - name: Deploy to development namespace
-        run: kubectl apply -f $GITHUB_WORKSPACE/config/deployment.yml -n development
+      - name: Deploy to staging namespace
+        run: kubectl apply -f $GITHUB_WORKSPACE/config/staging.yml -n staging
       
       - name: Verify deployment
         run: |
-          if ! kubectl rollout status deployment/flaskdevelopment -n development; then
-            doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/python-example:$(echo $GITHUB_SHA | head -c7) --force
+          if ! kubectl rollout status deployment/flaskstaging -n development; then
+            doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/staging:$(echo $GITHUB_SHA | head -c7) --force
             exit 1
           fi
         
       - name: Delete previous image from DigitalOcean Container Registry
         run: |
-          IMAGE_NAME=${{ secrets.REGISTRY_NAME }}/python-example
+          IMAGE_NAME=${{ secrets.REGISTRY_NAME }}/staging
           IMAGE_TAG=$(echo $GITHUB_SHA | head -c7)
           PREVIOUS_TAG=$(doctl registry repository list-tags $IMAGE_NAME --format Tag --no-header | grep -v $IMAGE_TAG | tail -n 1)
           if [ -n "$PREVIOUS_TAG" ]; then
             doctl registry repository delete $IMAGE_NAME:$PREVIOUS_TAG --force
           fi
-
