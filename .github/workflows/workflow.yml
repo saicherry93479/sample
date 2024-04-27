@@ -4,7 +4,7 @@ name: Build, push, and deploy
 on:
   push:
     branches:
-      - main
+      - staging
       
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout main
+      - name: Checkout staging
         uses: actions/checkout@v2
       
       - name: Install doctl
