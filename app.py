@@ -1,32 +1,34 @@
-import csv
-from random import randint
-from grpc import insecure_channel
-from sklearn.preprocessing import LabelEncoder
 from flask import Flask, render_template, request, redirect, send_file, send_from_directory, url_for, flash, session
 import numpy as np
 import mysql.connector
 import os
 import pandas as pd
 import smtplib
-import random
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 import pickle
-import docx2txt
-from pyresparser import ResumeParser
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
-# from sklearn.neighbors import _dist_metrics
-# from sklearn.neighbors import _dist_metrics
-from sklearn.neighbors import KNeighborsClassifier
+import os
+from flask import Flask, request, render_template, redirect, url_for
+from werkzeug.utils import secure_filename
+from docx import Document
+import spacy
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 app.config['uploadfolder'] = "static/"
 
-mydb = mysql.connector.connect(host="localhost",port=3306, user="root", passwd="", database="job_mapper")
+mydb = mysql.connector.connect(host="db-mysql-nyc3-37516-devlopment-do-user-16025762-0.c.db.ondigitalocean.com",port=25060, user="doadmin", password="AVNS_-LGlQgWL5u2tMGbNJIP", database="defaultdb",auth_plugin='mysql_native_password')
 cursor = mydb.cursor(buffered=True)
 
 
@@ -761,14 +763,7 @@ def predict():
 #         return render_template('job_seeker/load.html',m1=m1,msg2=msg2, msg3 = msg3,msg4=name,msg5= email , file_names = random_files)
 
 #     return render_template('job_seeker/load.html')
-import os
-import random
-from flask import Flask, request, render_template, redirect, url_for
-from werkzeug.utils import secure_filename
-from docx import Document
-import spacy
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -941,10 +936,7 @@ def send_mail():
     data2 = cursor.fetchall()
 
 
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
+ 
     sender = data[0][11]
     receiver = data[0][2]
     password = "xbis dzsd uokj ulja"  
@@ -990,4 +982,4 @@ def decline():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0',debug=True,port=5000)
