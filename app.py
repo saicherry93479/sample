@@ -48,18 +48,18 @@ def signup():
 @app.route('/j_register', methods=["GET", "POST"])
 def j_register():
     if request.method == 'POST':
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        c_password = request.form['c_password']
-        mobile = request.form['mobile']
-        address = request.form['address']
-        gender = request.form['gender']
-        age = request.form['age']
-        state = request.form['state']
-        district = request.form['district']
-        image = request.files['image']
-        resume = request.files['resume']
+        name = request.form.get("name")
+        email = request.form.get("email")
+        password =request.form.get("password")
+        c_password = request.form.get("c_password")
+        mobile = request.form.get("mobile")
+        address =  request.form.get("address")
+        gender = request.form.get("gender")
+        age = request.form.get("age")
+        state = request.form.get("state")
+        district =  request.form.get("district")
+        image = request.form.get("image")
+        resume =  request.form.get("resume")
 
         fn1=image.filename
         mypath1=os.path.join('static/photos/', fn1)
