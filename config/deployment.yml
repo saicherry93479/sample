@@ -3,14 +3,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flaskdevelopment
+  name: flaskproduction
   labels:
-    app: flaskdevelopment
+    app: flaskproduction
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: flaskdevelopment
+      app: flaskproduction
   strategy:
     rollingUpdate:
       maxSurge: 1
@@ -19,10 +19,10 @@ spec:
   template:
     metadata:
       labels:
-        app: flaskdevelopment
+        app: flaskproduction
     spec:
       containers:
-      - name: flaskdevelopment
+      - name: flaskproduction
         image: <IMAGE>
         ports:
         - containerPort: 5000
@@ -35,7 +35,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: flaskdevelopmentservice
+  name: flaskproductionservice
 spec:
   type: LoadBalancer
   ports:
@@ -44,4 +44,4 @@ spec:
       port: 5000
       targetPort: 5000
   selector:
-    app: flaskdevelopment
+    app: flaskproduction
