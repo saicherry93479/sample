@@ -4,7 +4,9 @@ name: Build, push, and deploy
 on:
   push:
     branches:
+      - devlopment
       - staging
+      - main
       
 
 jobs:
@@ -12,8 +14,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout staging
+      - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Set up environment variables
+        run: |
+          echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
       
       - name: Install doctl
         uses: digitalocean/action-doctl@v2
@@ -21,55 +28,41 @@ jobs:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       
       - name: Build container image
-        run: docker build -t ${{ secrets.REGISTRY_NAME }}/staging:$(echo $GITHUB_SHA | head -c7) .
+        run: docker build -t ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}:$(echo $GITHUB_SHA | head -c7) .
       
       - name: Log in to DigitalOcean Container Registry with short-lived credentials
         run: doctl registry login --expiry-seconds 1200
       
       - name: Push image to DigitalOcean Container Registry
-        run: docker push ${{ secrets.REGISTRY_NAME }}/staging:$(echo $GITHUB_SHA | head -c7)
+        run: docker push ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}:$(echo $GITHUB_SHA | head -c7)
       
       - name: Update deployment file
-        run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ secrets.REGISTRY_NAME }}/staging:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml
+        run: TAG=$(echo $GITHUB_SHA | head -c7) && sed -i 's|<IMAGE>|${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}:'${TAG}'|' $GITHUB_WORKSPACE/config/deployment.yml && sed -i 's|<NAME>|${{ env.BRANCH_NAME }}|' $GITHUB_WORKSPACE/config/deployment.yml
       
       - name: Save DigitalOcean kubeconfig with short-lived credentials
         run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.CLUSTER_NAME }}
       
-      - name: Check if staging namespace exists
+      - name: Check if development namespace exists
         run: |
-          if ! kubectl get namespace staging; then
-            kubectl create namespace staging
+          if ! kubectl get namespace development; then
+            kubectl create namespace development
           fi
       
-      - name: Deploy to staging namespace
-        run: kubectl apply -f $GITHUB_WORKSPACE/config/deployment.yml -n staging
+      - name: Deploy to development namespace
+        run: kubectl apply -f $GITHUB_WORKSPACE/config/deployment.yml -n development
       
       - name: Verify deployment
         run: |
-          if ! kubectl rollout status deployment/flaskstaging -n staging; then
-            doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/staging:$(echo $GITHUB_SHA | head -c7) --force
+          if ! kubectl rollout status deployment/${{ env.BRANCH_NAME }} -n development; then
+            doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}:$(echo $GITHUB_SHA | head -c7) --force
             exit 1
           fi
         
       - name: Delete previous image from DigitalOcean Container Registry
         run: |
-          # Construct the full image name including the registry name
-          IMAGE_NAME="${{ secrets.REGISTRY_NAME }}/staging"
-          
-          # Get the first 7 characters of the commit SHA as the image tag
-          IMAGE_TAG=$(echo ${{ github.sha }} | head -c7)
-          
-          # Retrieve the list of tags for the repository
-          TAGS=$(doctl registry repository list-tags $IMAGE_NAME --format Tag --no-header)
-          
-          # Exclude the current image tag from the list
-          PREVIOUS_TAG=$(echo "$TAGS" | grep -v $IMAGE_TAG | tail -n 1)
-          
-          # Check if there's a previous tag to delete
+          IMAGE_NAME=${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}
+          IMAGE_TAG=$(echo $GITHUB_SHA | head -c7)
+          PREVIOUS_TAG=$(doctl registry repository list-tags $IMAGE_NAME --format Tag --no-header | grep -v $IMAGE_TAG | tail -n 1)
           if [ -n "$PREVIOUS_TAG" ]; then
-            # Delete the previous tag
-            doctl registry repository delete "$IMAGE_NAME:$PREVIOUS_TAG" --force
+            doctl registry repository delete $IMAGE_NAME:$PREVIOUS_TAG --force
           fi
-        env:
-          GITHUB_SHA: ${{ github.sha }}
-
