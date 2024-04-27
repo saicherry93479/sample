@@ -53,7 +53,7 @@ jobs:
       - name: Verify deployment
         run: |
           if ! kubectl rollout status deployment/${{ env.BRANCH_NAME }} -n ${{ env.BRANCH_NAME }}; then
-            doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}:$(echo $GITHUB_SHA | head -c7) --force
+            doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}:$(echo $GITHUB_SHA | head -c7) 
             exit 1
           fi
 
@@ -69,5 +69,5 @@ jobs:
           IMAGE_TAG=$(echo $GITHUB_SHA | head -c7)
           PREVIOUS_TAG=$(doctl registry repository list-tags ${{ env.BRANCH_NAME }} --format Tag --no-header | grep -v $IMAGE_TAG | tail -n 1)
           if [ -n "$PREVIOUS_TAG" ]; then
-            doctl registry repository delete $IMAGE_NAME:$PREVIOUS_TAG --force
+            doctl registry repository delete $IMAGE_NAME:$PREVIOUS_TAG 
           fi
