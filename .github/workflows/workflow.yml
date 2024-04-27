@@ -46,7 +46,7 @@ jobs:
       
       - name: Verify deployment
         run: |
-          if ! kubectl rollout status deployment/flaskstaging -n development; then
+          if ! kubectl rollout status deployment/flaskstaging -n staging; then
             doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/staging:$(echo $GITHUB_SHA | head -c7) --force
             exit 1
           fi
