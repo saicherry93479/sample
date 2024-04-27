@@ -42,18 +42,18 @@ jobs:
       - name: Save DigitalOcean kubeconfig with short-lived credentials
         run: doctl kubernetes cluster kubeconfig save --expiry-seconds 600 ${{ secrets.CLUSTER_NAME }}
       
-      - name: Check if development namespace exists
+      - name: Check if ${{ env.BRANCH_NAME }} namespace exists
         run: |
-          if ! kubectl get namespace development; then
-            kubectl create namespace development
+          if ! kubectl get namespace ${{ env.BRANCH_NAME }}; then
+            kubectl create namespace ${{ env.BRANCH_NAME }}
           fi
       
-      - name: Deploy to development namespace
-        run: kubectl apply -f $GITHUB_WORKSPACE/config/deployment.yml -n development
+      - name: Deploy to ${{ env.BRANCH_NAME }} namespace
+        run: kubectl apply -f $GITHUB_WORKSPACE/config/deployment.yml -n ${{ env.BRANCH_NAME }}
       
       - name: Verify deployment
         run: |
-          if ! kubectl rollout status deployment/${{ env.BRANCH_NAME }} -n development; then
+          if ! kubectl rollout status deployment/${{ env.BRANCH_NAME }} -n ${{ env.BRANCH_NAME }}; then
             doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}:$(echo $GITHUB_SHA | head -c7) --force
             exit 1
           fi
