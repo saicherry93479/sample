@@ -57,12 +57,18 @@ jobs:
             doctl registry repository delete ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}:$(echo $GITHUB_SHA | head -c7) --force
             exit 1
           fi
-        
+
+      - name: List all tags for the image
+        run: |
+          IMAGE_NAME=${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}
+          doctl registry repository list-tags $IMAGE_NAME --format Tag --no-header
+      
+              
       - name: Delete previous image from DigitalOcean Container Registry
         run: |
           IMAGE_NAME=${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }}
           IMAGE_TAG=$(echo $GITHUB_SHA | head -c7)
-          PREVIOUS_TAG=$(doctl registry repository list-tags $IMAGE_NAME --format Tag --no-header | grep -v $IMAGE_TAG | tail -n 1)
+          PREVIOUS_TAG=$(doctl registry repository list-tags ${{ secrets.REGISTRY_NAME }}/${{ env.BRANCH_NAME }} --format Tag --no-header | grep -v $IMAGE_TAG | tail -n 1)
           if [ -n "$PREVIOUS_TAG" ]; then
             doctl registry repository delete $IMAGE_NAME:$PREVIOUS_TAG --force
           fi
