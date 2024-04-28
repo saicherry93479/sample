@@ -2,7 +2,7 @@
 name: Build, push, and deploy
 
 on:
-  pull_request:
+  push:
     branches:
       - devlopment
       - staging
