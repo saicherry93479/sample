@@ -71,3 +71,10 @@ jobs:
           if [ -n "$PREVIOUS_TAG" ]; then
             doctl registry repository delete $IMAGE_NAME:$PREVIOUS_TAG 
           fi
+      - name: Get External IP of the Service
+        id: get_ip
+        run: |
+          IP=$(kubectl get service devlopment -o=jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "EXTERNAL_IP=$IP" >> $GITHUB_ENV
+          echo "::set-output name=external_ip::$IP:5000"
+
