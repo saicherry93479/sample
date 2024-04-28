@@ -59,8 +59,8 @@ def j_register():
         age = request.form["age"]
         state = request.form["state"]
         district =  request.form["district"]
-        image = request.form["image"]
-        resume =  request.form["resume"]
+        image = request.files['image']
+        resume =  request.files['resume']
         # name = request.form.get("name")
         # email = request.form.get("email")
         # password =request.form.get("password")
